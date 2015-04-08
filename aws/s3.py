@@ -65,7 +65,7 @@ class S3Manager(object):
             except Exception:
                 err3 = sys.exc_info()
                 log.warn(' '.join(map(repr, err3)))
-        raise err3
+        raise err3[0], err3[1], err3[2]
 
     def __getattr__(self, name):
         if name in _S3Connection.OPERATIONS:
@@ -73,20 +73,6 @@ class S3Manager(object):
                 return self._operate(name, *args, **kwargs)
             return wrapper
         raise AttributeError('operation {} not allowed'.format(name))
-    
-    # def get(self, bucket_name, key_name):
-    #     return self._operate('get', bucket_name, key_name)
-
-    # def put(self, bucket_name, key_name, content):
-    #     return self._operate('put', bucket_name, key_name, content)
-
-    # def copy(self, src_bucket_name, src_key_name,
-    #          dst_bucket_name, dst_key_name):
-    #     return self._operate('copy', src_bucket_name, src_key_name,
-    #                          dst_bucket_name, dst_key_name)
-
-    #def delete_keys(self, bucket_name, key_names):
-    #    return self._operate('
 
 
 def _set_failed_on_error(f):
@@ -101,7 +87,7 @@ def _set_failed_on_error(f):
 
 class _S3Connection(object):
 
-    OPERATIONS = ['get', 'put', 'copy', 'delete_keys']
+    OPERATIONS = ['get', 'list', 'put', 'copy', 'delete_keys']
                     
     def __init__(self):
         self._conn = boto.connect_s3()
@@ -122,6 +108,13 @@ class _S3Connection(object):
     def get(self, bucket_name, key_name):
         key = self.get_bucket(bucket_name).get_key(key_name)
         return key.get_contents_as_string()
+
+    @_set_failed_on_error
+    def list(self, bucket_name, prefix='', delimiter='', marker='',
+             headers=None, encoding_type=None):
+        return self.get_bucket(bucket_name).list(prefix=prefix,
+                                                 delimiter=delimiter,
+                                                 marker=marker)
 
     @_set_failed_on_error
     def put(self, bucket_name, key_name, content):
