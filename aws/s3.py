@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 import contextlib
 import logging
+import os
+import re
 import sys
 import time
 
@@ -11,6 +13,36 @@ import gevent.queue
 
 
 log = logging.getLogger(__name__)
+
+
+def ensure_unicode(s, encoding='utf-8'):
+    return s if isinstance(s, unicode) else s.decode(encoding)
+
+
+class S3URI(unicode):
+
+    validate = re.compile(ur'^s3://(.+)$', re.U)
+
+    def __init__(self, uri):
+        b, k = self.split_s3_path(uri)
+        self.bucket_name = b
+        self.key_name = k
+
+    @classmethod
+    def split_s3_path(cls, uri):
+        m = cls.validate.search(uri)
+        if not m:
+            raise ValueError(u'Invalid S3 URI ({})'.format(uri))
+        ts = m.group(1).split(u'/', 1)
+        bucket = ts[0]
+        key = ts[1] if len(ts) > 1 else u''
+        return ensure_unicode(bucket), ensure_unicode(key)
+
+    def __unicode__(self):
+        return os.path.join(u's3://', self.bucket_name, self.key_name)
+
+    def __str__(self):
+        return self.__unicode__.encode('utf-8')
 
 
 class S3Manager(object):
@@ -124,8 +156,8 @@ class _S3Connection(object):
     @_set_failed_on_error
     def copy(self, src_bucket_name, src_key_name,
              dst_bucket_name, dst_key_name):
-        key = self.get_bucket(src_bucket_name).get_key(src_key_name)
-        return key.copy(dst_bucket_name, dst_key_name)
+        return (self.get_bucket(src_bucket_name).get_key(src_key_name)
+                .copy(dst_bucket_name, dst_key_name))
 
     @_set_failed_on_error
     def delete_keys(self, bucket_name, key_names):
