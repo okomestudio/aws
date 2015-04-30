@@ -38,7 +38,7 @@ def main(args):
         log.info(u'copying key from {} to {}'
                  .format(os.path.join(src_bucket_name, src_key_name),
                          os.path.join(dest_bucket_name, dest_key_name)))
-        retry = 3
+        retry = 10
         for i in xrange(retry):
             try:
                 s3.copy(
@@ -61,7 +61,7 @@ def main(args):
                      .format(len(pool)))
             gevent.sleep(wait)
 
-    g_log_qsize = gevent.spawn(log_qsize, 1)
+    g_log_qsize = gevent.spawn(log_qsize, 5)
 
     for i, key in enumerate(s3.list(src.bucket_name, prefix=src.key_name)):
         dest_key_name = os.path.join(dest.key_name, key.name[len(src.key_name):])
