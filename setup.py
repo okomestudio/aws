@@ -26,6 +26,7 @@ setup(
         'aws',
     ],
     scripts=[
+        'bin/s3_copy.py',
         'bin/s3_delete_all.py',
     ],
     version='.'.join(filter(None, map(str, VERSION))),

@@ -13,6 +13,8 @@ import gevent.queue
 
 
 log = logging.getLogger(__name__)
+ch = logging.StreamHandler()
+log.addHandler(ch)
 
 
 def ensure_unicode(s, encoding='utf-8'):

@@ -1,11 +1,11 @@
 #!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
-"""Sync two directories.
+"""Copy keys under one bucket to another.
 
 Examples
 --------
 
-  $ s3_sync.py s3://somebucket/a/ s3://otherbucket/b/
+  $ s3_copy.py s3://somebucket/a/ s3://otherbucket/b/
 
 will copy all files under s3://somebucket/a/ to s3://otherbucket/b/.
 
@@ -15,6 +15,7 @@ gevent.monkey.patch_all()
 
 from argparse import ArgumentParser
 import logging
+import os
 
 import gevent
 import gevent.pool
@@ -52,15 +53,16 @@ def main(args):
         else:
             raise
 
+    pool = gevent.pool.Pool(1000)
+
     def log_qsize(wait):
         while True:
-            log.info(u'{}: number of concurrent copy tasks = {}'
-                     .format(group_id, pool_size - pool.free_count()))
+            log.info(u'number of concurrent copy tasks = {}'
+                     .format(len(pool)))
             gevent.sleep(wait)
 
-    g_log_qsize = gevent.spawn(log_qsize, 15)
+    g_log_qsize = gevent.spawn(log_qsize, 1)
 
-    pool = gevent.pool.Group()
     for i, key in enumerate(s3.list(src.bucket_name, prefix=src.key_name)):
         dest_key_name = os.path.join(dest.key_name, key.name[len(src.key_name):])
         pool.spawn(copy_key, src.bucket_name, key.name, dest.bucket_name, dest_key_name)
