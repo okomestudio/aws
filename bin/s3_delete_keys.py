@@ -30,8 +30,8 @@ log.addHandler(ch)
 
 
 def main(args):
-    pool_size = 10
-    n_key_batch = 1000
+    pool_size = 2
+    n_key_batch = 100
 
     def task_group(group_id, bucket_name, prefix):
         pool = gevent.pool.Pool(pool_size)
