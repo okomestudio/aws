@@ -1,5 +1,3 @@
-#!/usr/bin/env python2.7
-# -*- coding: utf-8 -*-
 """Delete multiple keys.
 
 Examples
@@ -29,7 +27,7 @@ ch = logging.StreamHandler()
 log.addHandler(ch)
 
 
-def main(args):
+def _main(args):
     pool_size = 2
     n_key_batch = 100
 
@@ -82,12 +80,12 @@ def main(args):
     group.join()
 
 
-if __name__ == '__main__':
+def main():
     p = ArgumentParser(description=__doc__.strip())
     p.add_argument('uri', type=str,
                    help='S3 URI')
     p.add_argument('key_prefix', type=str, nargs='*', default=[''],
                    help='S3 key prefix(es)')
     p.add_argument('--marker', type=str, default='',
-                   help='resume iteration from given key') 
-    main(p.parse_args())
+                   help='resume iteration from given key')
+    _main(p.parse_args())

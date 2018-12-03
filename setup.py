@@ -1,38 +1,39 @@
-#!/usr/bin/env python2.7
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
+import codecs
+import os
+import re
+
+from setuptools import find_packages
 from setuptools import setup
 
 
-VERSION = (0, 1, 0, "alpha")
-
-
-def get_requirements():
-    reqs = []
-    with open('requirements.txt', mode='r') as f:
-        for line in f:
-            line = line.rstrip()
-            if (line.startswith('#')
-                or line.startswith('-e ')
-                or not line):
-                continue
-            reqs.append(line)
-    return reqs
+def find_meta(category, fpath="src/tsutils_aws/__init__.py"):
+    here = os.path.abspath(os.path.dirname(__file__))
+    with codecs.open(os.path.join(here, fpath), "r") as f:
+        package_root_file = f.read()
+    matched = re.search(
+        r"^__{}__\s+=\s+['\"]([^'\"]*)['\"]".format(category), package_root_file, re.M
+    )
+    if matched:
+        return matched.group(1)
+    raise Exception("Meta info string for {} undefined".format(category))
 
 
 setup(
-    name='aws',
-    description='AWS utilities',
-    packages=[
-        'aws',
-    ],
-    scripts=[
-        'bin/s3_copy.py',
-        'bin/s3_delete_keys.py',
-        'bin/s3_list.py',
-    ],
-    version='.'.join(filter(None, map(str, VERSION))),
-    author='Taro Sato',
-    author_email='taro@okomestudio.net',
-    url='http://github.com/okomestudio/aws',
-    install_requires=get_requirements(),
+    name="tsutils-aws",
+    description="TS's personal utilities for AWS",
+    version=find_meta("version"),
+    package_dir={"": "src"},
+    packages=find_packages("src"),
+    entry_points={
+        "console_scripts": [
+            "s3_copy=tsutils_aws.s3.copy:main",
+            "s3_delete=tsutils_aws.s3.delete:main",
+            "s3_list=tsutils_aws.s3.list:main",
+        ]
+    },
+    scripts=["bin/lambda_pack_dist"],
+    author="Taro Sato",
+    author_email="okomestudio@gmail.com",
+    url="https://github.com/okomestudio/tsutils-aws",
 )

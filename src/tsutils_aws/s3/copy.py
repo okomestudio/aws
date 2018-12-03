@@ -1,5 +1,3 @@
-#!/usr/bin/env python2.7
-# -*- coding: utf-8 -*-
 """Copy keys under one bucket to another.
 
 Examples
@@ -29,7 +27,7 @@ ch = logging.StreamHandler()
 log.addHandler(ch)
 
 
-def main(args):
+def _main(args):
     src = S3URI(args.src_s3_uri)
     dest = S3URI(args.dest_s3_uri)
 
@@ -72,12 +70,12 @@ def main(args):
     g_log_qsize.join()
 
 
-if __name__ == '__main__':
+def main():
     p = ArgumentParser(description=__doc__.strip())
     p.add_argument('src_s3_uri', type=str,
                    help='Source S3 URI')
     p.add_argument('dest_s3_uri', type=str,
                    help='Destination S3 URI')
     #p.add_argument('--marker', type=str, default='',
-    #               help='resume iteration from given key') 
-    main(p.parse_args())
+    #               help='resume iteration from given key')
+    _main(p.parse_args())

@@ -1,5 +1,3 @@
-#!/usr/bin/env python2.7
-# -*- coding: utf-8 -*-
 import contextlib
 import logging
 import os
@@ -122,7 +120,7 @@ def _set_failed_on_error(f):
 class _S3Connection(object):
 
     OPERATIONS = ['get', 'list', 'put', 'copy', 'delete_keys']
-                    
+
     def __init__(self):
         self._conn = boto.connect_s3()
         self._bucket = {}

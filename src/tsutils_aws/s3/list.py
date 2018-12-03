@@ -1,5 +1,3 @@
-#!/usr/bin/env python2.7
-# -*- coding: utf-8 -*-
 """List keys under a bucket concurrently.
 
 Examples
@@ -27,7 +25,7 @@ ch = logging.StreamHandler()
 log.addHandler(ch)
 
 
-def main(args):
+def _main(args):
     src = S3URI(args.uri)
 
     prefixes = [c for c in args.valid_chars]
@@ -37,7 +35,7 @@ def main(args):
             for c in args.valid_chars:
                 ps.append(c + prefix)
         prefixes = ps
-    
+
     def task_group(group_id, bucket_name, prefix):
         for i, key in enumerate(s3.list(bucket_name, prefix=prefix)):
             print key.name
@@ -49,7 +47,7 @@ def main(args):
     group.join()
 
 
-if __name__ == '__main__':
+def main():
     p = ArgumentParser(description=__doc__.strip())
     p.add_argument(
         'uri', type=str,
@@ -64,4 +62,4 @@ if __name__ == '__main__':
         '--num-prefix-chars', type=int, default=2,
         help='Number of prefix characters used for concurrent requests'
     )
-    main(p.parse_args())
+    _main(p.parse_args())
