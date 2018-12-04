@@ -32,7 +32,7 @@ setup(
             "s3_list=tsutils_aws.s3.list:main",
         ]
     },
-    scripts=["bin/lambda_pack_dist"],
+    scripts=["bin/lambda_pack_deployment"],
     author="Taro Sato",
     author_email="okomestudio@gmail.com",
     url="https://github.com/okomestudio/tsutils-aws",

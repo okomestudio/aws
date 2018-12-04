@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+
+function usage() {
+  cat <<USAGE >&2
+Usage: lambda_pack_dist
+
+USAGE
+  exit ${2:-1}
+}
+
+
+function error() {
+  >&2 echo "ERROR: $1"
+  exit ${2:-1}
+}
+
+
+function randchars() {
+  local n=${1:-8}
+  echo $(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w $n | head -n 1)
+}
+
+
+function require() {
+  for cmd in "$@"; do
+    [[ ! -x "$(command -v $cmd)" ]] && error "Command $cmd is required" || :
+  done
+}
+
+
+function clean_up_venv() {
+  local venvdir=$1
+  local output=$2
+  deactivate
+  rm -rf $venvdir
+  if [[ ! -z $output ]]; then
+    rm $output
+  fi
+  exit 1
+}
+
+
+function main() {
+  require virtualenv pip zip
+
+  local name=$1[@]
+  local packages=("${!name}")
+  local output=$(realpath $2)
+  local files=${@:3}
+
+  local venv="lambda-pack-dist-$(randchars 4)"
+  local current=$(pwd)
+
+  virtualenv $venv
+  source $venv/bin/activate
+
+  local venvdir=$VIRTUAL_ENV
+  local pyver=$(python -V | sed 's/.* \([0-9]\).\([0-9]\).*/\1.\2/')
+
+  for package in $packages; do
+    pip install "$package" || clean_up_venv "$venvdir" "$output"
+  done
+
+  cd "${venvdir}/lib/python${pyver}/site-packages"
+  zip -r9 $output .
+
+  cd "$current"
+  for filename in "$files"; do
+    zip -g $output $filename || clean_up_venv "$venvdir" "$output"
+  done
+
+  deactivate
+
+  clean_up_venv "$venvdir"
+}
+
+
+declare packages
+declare output="lambda_deployment_package.zip"
+
+while getopts hp: opt; do
+  case $opt in
+    h)
+      usage 0
+      ;;
+    o)
+      output="$OPTARG"
+      ;;
+    p)
+      packages="$packages $OPTARG"
+      ;;
+    \?)
+      usage
+      ;;
+    :)
+      error "Option -$OPTARG requires an argument"
+      ;;
+  esac
+done
+shift $(($OPTIND - 1))
+
+main packages "$output" "$@"
