@@ -2,7 +2,15 @@
 
 function usage() {
   cat <<USAGE >&2
-Usage: lambda_pack_dist
+Usage: ${0##*/} [-p PYPI_PACKAGE [-p PYPI_PACKAGE ...]] FILENAME [FILENAME ...]
+
+Create an AWS/Lambda deployment package.
+
+  -o  Output deployment package name (default: lambda_deployment_package.zip)
+
+  -p  PyPI package name to include
+
+  -h  Show help
 
 USAGE
   exit ${2:-1}
@@ -47,9 +55,8 @@ function main() {
   local packages=("${!name}")
   local output=$(realpath $2)
   local files=${@:3}
-
+  
   local venv="lambda-pack-dist-$(randchars 4)"
-  local current=$(pwd)
 
   virtualenv $venv
   source $venv/bin/activate
@@ -61,16 +68,15 @@ function main() {
     pip install "$package" || clean_up_venv "$venvdir" "$output"
   done
 
-  cd "${venvdir}/lib/python${pyver}/site-packages"
-  zip -r9 $output .
+  pushd "${venvdir}/lib/python${pyver}/site-packages" &&
+    zip -r9 $output . || clean_up_venv "$venvdir" "$output"
+  popd
 
-  cd "$current"
   for filename in "$files"; do
     zip -g $output $filename || clean_up_venv "$venvdir" "$output"
   done
 
-  deactivate
-
+  source deactivate
   clean_up_venv "$venvdir"
 }
 
@@ -98,5 +104,7 @@ while getopts hp: opt; do
   esac
 done
 shift $(($OPTIND - 1))
+
+[[ -z $@ ]] && usage
 
 main packages "$output" "$@"
