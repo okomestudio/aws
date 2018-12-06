@@ -30,6 +30,7 @@ setup(
             "s3_copy=tsutils_aws.s3.copy:main",
             "s3_delete=tsutils_aws.s3.delete:main",
             "s3_list=tsutils_aws.s3.list:main",
+            "s3_write_success=tsutils_aws.s3.write_success:main",
         ]
     },
     scripts=["bin/lambda_pack_deployment"],
